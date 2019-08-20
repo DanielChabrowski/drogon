@@ -460,18 +460,13 @@ void HttpServer::sendResponses(
         if (!resp.second)
         {
             // Not HEAD method
-            auto httpString = respImplPtr->renderToString();
+            respImplPtr->renderToBuffer(buffer);
             auto &sendfileName = respImplPtr->sendfileName();
             if (!sendfileName.empty())
             {
                 conn->send(buffer);
                 buffer.retrieveAll();
-                conn->send(httpString);
                 conn->sendFile(sendfileName.c_str());
-            }
-            else
-            {
-                buffer.append(httpString->data(), httpString->length());
             }
         }
         else
@@ -493,6 +488,6 @@ void HttpServer::sendResponses(
     if (conn->connected() && buffer.readableBytes() > 0)
     {
         conn->send(buffer);
-        buffer.retrieveAll();
     }
+    buffer.retrieveAll();
 }

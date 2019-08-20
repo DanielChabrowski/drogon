@@ -213,7 +213,100 @@ void HttpResponseImpl::makeHeaderString(
             HttpAppFrameworkImpl::instance().getServerHeaderString());
     }
 }
+void HttpResponseImpl::renderToBuffer(trantor::MsgBuffer &buffer) const
+{
+    if (_expriedTime >= 0)
+    {
+        auto strPtr = renderToString();
+        buffer.append(strPtr->data(), strPtr->length());
+        return;
+    }
 
+    if (!_fullHeaderString)
+    {
+        char buf[128];
+        auto len = snprintf(buf, sizeof buf, "HTTP/1.1 %d ", _statusCode);
+        buffer.append(buf, len);
+        if (!_statusMessage.empty())
+            buffer.append(_statusMessage.data(), _statusMessage.length());
+        buffer.append("\r\n");
+        if (_sendfileName.empty())
+        {
+            len = snprintf(buf,
+                           sizeof buf,
+                           "Content-Length: %lu\r\n",
+                           static_cast<long unsigned int>(_bodyPtr->size()));
+        }
+        else
+        {
+            struct stat filestat;
+            if (stat(_sendfileName.c_str(), &filestat) < 0)
+            {
+                LOG_SYSERR << _sendfileName << " stat error";
+                return;
+            }
+            len =
+                snprintf(buf,
+                         sizeof buf,
+                         "Content-Length: %llu\r\n",
+                         static_cast<long long unsigned int>(filestat.st_size));
+        }
+
+        buffer.append(buf, len);
+        if (_headers.find("Connection") == _headers.end())
+        {
+            if (_closeConnection)
+            {
+                buffer.append("Connection: close\r\n");
+            }
+            else
+            {
+                // output->append("Connection: Keep-Alive\r\n");
+            }
+        }
+        buffer.append(_contentTypeString.data(), _contentTypeString.length());
+        for (auto it = _headers.begin(); it != _headers.end(); ++it)
+        {
+            buffer.append(it->first);
+            buffer.append(": ");
+            buffer.append(it->second);
+            buffer.append("\r\n");
+        }
+        if (HttpAppFrameworkImpl::instance().sendServerHeader())
+        {
+            buffer.append(
+                HttpAppFrameworkImpl::instance().getServerHeaderString());
+        }
+    }
+    else
+    {
+        buffer.append(*_fullHeaderString);
+    }
+
+    // output cookies
+    if (_cookies.size() > 0)
+    {
+        for (auto it = _cookies.begin(); it != _cookies.end(); ++it)
+        {
+            buffer.append(it->second.cookieString());
+        }
+    }
+
+    // output Date header
+    if (drogon::HttpAppFrameworkImpl::instance().sendDateHeader())
+    {
+        buffer.append("Date: ");
+        buffer.append(
+            string_view(utils::getHttpFullDate(trantor::Date::date())));
+        buffer.append("\r\n\r\n");
+    }
+    else
+    {
+        buffer.append("\r\n");
+    }
+
+    buffer.append(*_bodyPtr);
+}
 std::shared_ptr<std::string> HttpResponseImpl::renderToString() const
 {
     if (_expriedTime >= 0)

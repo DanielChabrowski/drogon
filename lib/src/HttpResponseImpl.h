@@ -239,6 +239,7 @@ class HttpResponseImpl : public HttpResponse
         _headers["location"] = url;
     }
     std::shared_ptr<std::string> renderToString() const;
+    void renderToBuffer(trantor::MsgBuffer &buffer) const;
     std::shared_ptr<std::string> renderHeaderForHeadMethod() const;
     virtual void clear() override;
 
