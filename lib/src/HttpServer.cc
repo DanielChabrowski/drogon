@@ -201,8 +201,7 @@ void HttpServer::onRequests(
 {
     if (requests.empty())
         return;
-    auto responsePtrs =
-        std::make_shared<std::vector<std::pair<HttpResponsePtr, bool>>>();
+
     auto loopFlagPtr = std::make_shared<bool>(true);
     for (auto &req : requests)
     {
@@ -241,14 +240,8 @@ void HttpServer::onRequests(
 
         _httpAsyncCallback(
             req,
-            [conn,
-             _close,
-             req,
-             loopFlagPtr,
-             responsePtrs,
-             isHeadMethod,
-             this,
-             requestParser](const HttpResponsePtr &response) {
+            [conn, _close, req, loopFlagPtr, isHeadMethod, this, requestParser](
+                const HttpResponsePtr &response) {
                 if (!response)
                     return;
                 if (!conn->connected())
@@ -312,7 +305,8 @@ void HttpServer::onRequests(
                         requestParser->popFirstRequest();
                         if (*loopFlagPtr)
                         {
-                            (*responsePtrs).emplace_back(newResp, isHeadMethod);
+                            requestParser->getResponseBuffer().emplace_back(
+                                newResp, isHeadMethod);
                         }
                         else
                         {
@@ -340,10 +334,11 @@ void HttpServer::onRequests(
                         {
                             if (*loopFlagPtr)
                             {
-                                sendResponses(conn,
-                                              *responsePtrs,
-                                              requestParser->getBuffer());
-                                responsePtrs->clear();
+                                sendResponses(
+                                    conn,
+                                    requestParser->getResponseBuffer(),
+                                    requestParser->getBuffer());
+                                requestParser->getResponseBuffer().clear();
                             }
                             conn->shutdown();
                         }
@@ -409,8 +404,13 @@ void HttpServer::onRequests(
             });
     }
     *loopFlagPtr = false;
-    if (conn->connected() && !responsePtrs->empty())
-        sendResponses(conn, *responsePtrs, requestParser->getBuffer());
+    if (conn->connected() && !requestParser->getResponseBuffer().empty())
+    {
+        sendResponses(conn,
+                      requestParser->getResponseBuffer(),
+                      requestParser->getBuffer());
+        requestParser->getResponseBuffer().clear();
+    }
 }
 
 void HttpServer::sendResponse(const TcpConnectionPtr &conn,

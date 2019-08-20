@@ -98,6 +98,17 @@ class HttpRequestParser : public trantor::NonCopyable
     {
         return _sendBuffer;
     }
+    std::vector<std::pair<HttpResponsePtr, bool>> &getResponseBuffer()
+    {
+        assert(_loop->isInLoopThread());
+        if (!_responseBuffer)
+        {
+            _responseBuffer =
+                std::unique_ptr<std::vector<std::pair<HttpResponsePtr, bool>>>(
+                    new std::vector<std::pair<HttpResponsePtr, bool>>);
+        }
+        return *_responseBuffer;
+    }
 
   private:
     void shutdownConnection(HttpStatusCode code);
@@ -113,6 +124,8 @@ class HttpRequestParser : public trantor::NonCopyable
     std::weak_ptr<trantor::TcpConnection> _conn;
     bool _stopWorking = false;
     trantor::MsgBuffer _sendBuffer;
+    std::unique_ptr<std::vector<std::pair<HttpResponsePtr, bool>>>
+        _responseBuffer;
 };
 
 }  // namespace drogon
