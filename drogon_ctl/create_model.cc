@@ -798,7 +798,7 @@ void create_model::createModel(const std::string &path,
 void create_model::createModel(const std::string &path)
 {
     DIR *dp;
-    if ((dp = opendir(path.c_str())) == NULL)
+    if ((dp = opendir(path.c_str())) == nullptr)
     {
         std::cerr << "No such file or directory : " << path << std::endl;
         return;

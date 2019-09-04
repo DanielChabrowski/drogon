@@ -538,7 +538,7 @@ std::string urlDecode(const char *begin, const char *end)
 /* Compress gzip data */
 std::string gzipCompress(const char *data, const size_t ndata)
 {
-    z_stream strm = {0};
+    z_stream strm = {nullptr};
     if (data && ndata > 0)
     {
         if (deflateInit2(&strm,
@@ -574,7 +574,7 @@ std::string gzipDecompress(const char *data, const size_t ndata)
     auto decompressed = std::string(full_length * 2, 0);
     bool done = false;
 
-    z_stream strm = {0};
+    z_stream strm = {nullptr};
     strm.next_in = (Bytef *)data;
     strm.avail_in = ndata;
     strm.total_out = 0;

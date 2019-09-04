@@ -30,7 +30,7 @@ static void forEachFileIn(
     struct stat st;
 
     /* open dirent directory */
-    if ((dp = opendir(path.c_str())) == NULL)
+    if ((dp = opendir(path.c_str())) == nullptr)
     {
         // perror("opendir:");
         LOG_ERROR << "can't open dir,path:" << path;
@@ -40,7 +40,7 @@ static void forEachFileIn(
     /**
      * read all files in this dir
      **/
-    while ((dirp = readdir(dp)) != NULL)
+    while ((dirp = readdir(dp)) != nullptr)
     {
         /* ignore hidden files */
         if (dirp->d_name[0] == '.')
