@@ -41,10 +41,10 @@ std::string nameTransform(const std::string &origName, bool isType)
     std::string ret;
     do
     {
-        pos = str.find("_", startPos);
+        pos = str.find('_', startPos);
         if (pos == std::string::npos)
         {
-            pos = str.find(".", startPos);
+            pos = str.find('.', startPos);
         }
         if (pos != std::string::npos)
             ret += str.substr(startPos, pos - startPos);

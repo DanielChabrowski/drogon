@@ -174,7 +174,7 @@ void press::handleCommand(std::vector<std::string> &parameters)
     else
     {
         auto pos = _url.find("://");
-        auto posOfPath = _url.find("/", pos + 3);
+        auto posOfPath = _url.find('/', pos + 3);
         if (posOfPath == std::string::npos)
         {
             _host = _url;
